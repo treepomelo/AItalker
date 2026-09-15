@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 public class ProductService {
     private final CatalogRepository catalog;
     private final TextModelService model;
+    private final PromptConfig prompts;
     private final ObjectMapper json = new ObjectMapper();
 
     public Flux<String> ask(long id, String question) {
@@ -26,7 +27,7 @@ public class ProductService {
         if (source.length() > 24000) throw new ApiProblem(400,"KNOWLEDGE_TOO_LARGE","商品资料过长，请管理员精简资料后重试");
         try {
             String messages = json.writeValueAsString(List.of(Map.of("role","user","content","我的问题是："+question)));
-            String system = "你是商品知识讲解助手。只能依据下面这件商品的资料回答用户问题，不确定时明确说资料中没有写明。禁止编造价格、功效、产地、认证、授权或售后承诺。回答简洁、自然，直接回应问题。\n\n当前商品资料：\n"+source;
+            String system = prompts.questionPrompt()+"\n\n当前商品资料：\n"+source;
             return model.stream(messages,system);
         } catch (Exception e) {
             throw new ApiProblem(500,"PRODUCT_QUESTION_FAILED","商品问题处理失败，请重试");
