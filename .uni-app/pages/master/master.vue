@@ -27,7 +27,7 @@ const chatRef = ref(null)
 
 const newChatTopic = () => {
   uni.vibrateShort()
-  if (getTokenValue()) {
+  {
     const chatTopic = getChatTopic();
     const {index, array} = chatTopic
     const arrayElement = array[index];
@@ -62,11 +62,6 @@ const newChatTopic = () => {
       chatRef.value.html([])
       setChatTopic(chatTopic)
     }
-  } else {
-    uni.reLaunch({
-      url: '/pages/auth/wechatLogin'
-    })
-
   }
 }
 
@@ -84,24 +79,10 @@ const templateHTML = (data) => {
   chatRef.value.html(data)
 }
 const init = async () => {
+  // 无登录模式：使用本地默认聊天配置，不再依赖用户资料接口。
   if (!store.getters.userSetting) {
-    try {
-      const {data} = await reqGetModelList();
-      store.commit("setUserSetting", {
-        model: data[0].model,
-        token: '',
-        url: '',
-        isPlugIns: true
-      });
-      store.commit("setUserInfo", {
-        avatar: ''
-      });
-    } catch (e) {
-      uni.showToast({icon: 'none', duration: 3000, title: "初始化用户数据失败"});
-    }
-  }
-  if (!getTokenValue()) {
-    return
+    store.commit("setUserSetting", { model: "gpt-3.5-turbo", token: "", url: "", isPlugIns: false });
+    store.commit("setUserInfo", { avatar: "" });
   }
   const chatTopic = getChatTopic();
   if (!chatTopic) {

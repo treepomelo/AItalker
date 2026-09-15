@@ -1,0 +1,4 @@
+.local/
+.java/target/
+.uni-app/node_modules/
+.uni-app/unpackage/

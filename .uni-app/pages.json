@@ -1,91 +1,35 @@
 {
   "pages": [
-
     {
-      "path": "pages/master/master",
       "style": {
-        "navigationStyle": "custom",
-        "mp-weixin": {
-          "backgroundColorTop": "#000000",
-          "backgroundColorBottom": "#000000"
-        }
-      }
+        "navigationBarTitleText": "商品讲解"
+      },
+      "path": "pages/product/product"
     },
     {
-      "path": "pages/master/view/chatTopicView",
-      "style": {
-        "navigationBarTitleText": "历史会话",
-        "mp-weixin": {
-          "backgroundColorTop": "#000000",
-          "backgroundColorBottom": "#000000"
-        }
-      }
+      "path": "pages/chat/chat",
+      "style": {"navigationBarTitleText": "实时聊天"}
     },
     {
-      "path": "pages/voice/voice",
-      "style": {
-        "navigationBarTitleText": "voice"
-      }
-    },
-    {
-      "path": "pages/user/view/devInfo",
-      "style": {
-        "navigationBarTitleText": "开发者信息"
-      }
-    },
-    {
-      "path": "pages/user/view/regards",
-      "style": {
-        "navigationBarTitleText": "关于此应用",
-        "backgroundColorTop": "#181818",
-        "backgroundColorBottom": "#181818",
-        "navigationBarBackgroundColor": "#181818",
-        "backgroundColor": "#181818"
-      }
-    },
-    {
-      "path": "pages/user/view/myConfig",
-      "style": {
-        "navigationBarTitleText": "管理配置",
-        "enablePullDownRefresh": true
-      }
-    },
-    {
-      "path": "pages/user/view/changeModel",
-      "style": {
-        "navigationBarTitleText": "选择模型",
-        "enablePullDownRefresh": true
-      }
-    },
-    {
-      "path": "pages/auth/wechatLogin",
-      "style": {
-        "navigationBarTitleText": "",
-        "enablePullDownRefresh": true,
-        "mp-weixin": {
-          "backgroundColorTop": "#000000",
-          "backgroundColorBottom": "#000000"
-        }
-      }
-    },
-    {
-      "path": "pages/user/user",
-      "style": {
-        "navigationBarTitleText": ""
-      }
-    },
-    {
-      "path": "pages/auth/scanQRCodeToLogIn",
-      "style": {
-        "navigationBarTitleText": ""
-      }
+      "path": "pages/settings/models",
+      "style": {"navigationBarTitleText": "模型配置"}
     }
   ],
   "globalStyle": {
     "navigationBarTextStyle": "white",
-    "navigationBarTitleText": "TYPE STAR",
+    "navigationBarTitleText": "商品讲解",
     "navigationBarBackgroundColor": "#000000",
     "backgroundColor": "#000000"
+  },
+  "tabBar": {
+    "color": "#778078",
+    "selectedColor": "#345747",
+    "backgroundColor": "#fffdf8",
+    "list": [
+      {"pagePath": "pages/product/product", "text": "商品讲解"},
+      {"pagePath": "pages/chat/chat", "text": "实时聊天"},
+      {"pagePath": "pages/settings/models", "text": "模型配置"}
+    ]
   },
   "uniIdRouter": {}
 }

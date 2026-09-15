@@ -1,8 +1,6 @@
-"use strict";
+const baseHttps = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
 
 export default {
-    // HTTP请求 基类
-    baseHttps: 'http://192.168.2.6:9000/api',
-    // 长连接请求 基类
-    baseWss: 'ws://192.168.2.6:9000/api',
-}
+    baseHttps,
+    baseWss: baseHttps.replace(/^http/, 'ws'),
+};

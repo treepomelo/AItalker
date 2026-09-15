@@ -3,34 +3,33 @@ import {getTokenValue} from "@/store/token";
 
 
 function service(options = {}) {
-    options.url = `${env.baseHttps}${options.url}`;
-    options.timeout = 100000;
-    const tokenValue = getTokenValue();
-    if (tokenValue) {
-        options.header = {
-            'content-type': 'application/json',
-            'Authorization': `Bearer ${tokenValue}`
-        };
+    if (!env.baseHttps) {
+        return Promise.reject({msg: '服务暂未配置，请联系管理员'});
     }
+    options.url = `${env.baseHttps}${options.url}`;
+    options.timeout = options.timeout || 100000;
+    const tokenValue = getTokenValue();
+    options.header = {
+        'content-type': 'application/json',
+        ...options.header,
+        ...(tokenValue ? {'Authorization': `Bearer ${tokenValue}`} : {}),
+    };
 
     return new Promise((resolve, reject) => {
         uni.request({
             ...options,
             success: function (res) {
-                if (res.statusCode === 200) {
+                if (res.statusCode >= 200 && res.statusCode < 300) {
                     const response = res.data;
 
                     if (response.code === 200) {
                         resolve(response);
-                    }else if (response.code === 401){
-                        uni.reLaunch({
-                            url: '/pages/auth/wechatLogin'
-                        })
-                    }else {
+                    } else {
                         reject(response);
                     }
                 } else {
-                    reject('与服务器建立连接失败');
+                    reject(res.data && typeof res.data === 'object' && res.data.msg
+                        ? res.data : {msg: '服务请求失败，请稍后重试'});
                 }
             },
             fail: function (e) {

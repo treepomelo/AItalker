@@ -29,14 +29,7 @@ const file = ref(undefined)
 
 const send = (text) => {
   let files = file.value
-  if (!getTokenValue()) {
-    uni.reLaunch({
-      url: '/pages/auth/wechatLogin'
-    })
-    return
-  }
-
-  const {token, url, model} = store.getters.userSetting;
+  const {token, url, model} = store.getters.userSetting || {};
   if (!token || !url) {
     uni.navigateTo({
       url: '/pages/user/view/myConfig'
@@ -96,9 +89,6 @@ const send = (text) => {
       title: '当前登录信息已过期,请重新登录'
     });
     removeTokenValue()
-    uni.reLaunch({
-      url: '/pages/auth/wechatLogin'
-    })
   });
 
   uni.onSocketClose(function () {
@@ -265,15 +255,7 @@ const scrollToBottom = () => {
 }
 
 const showUpload = () => {
-  if (getTokenValue()) {
-    uploadRef.value.open()
-  } else {
-    uni.navigateTo({
-      url: '/pages/auth/wechatLogin',
-      animationType: 'pop-in',
-      animationDuration: 200
-    })
-  }
+  uploadRef.value.open()
 }
 
 const chooseMessageFile = () => {

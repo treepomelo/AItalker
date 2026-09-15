@@ -14,7 +14,7 @@
     <name>type-stars</name>
     <description>type-stars</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
     </properties>
     <profiles>
         <profile>
