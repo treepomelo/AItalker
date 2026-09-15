@@ -19,6 +19,8 @@
 
 地址应包含供应商要求的版本前缀，例如 `https://api.openai.com/v1`。支持根地址或所选协议对应的完整接口地址，避免重复拼接；页面显示已保存配置实际使用的地址。模型和音色填写账号实际支持的 ID，模板不自动猜测或查询模型列表。
 
+模型身份和回答风格通过独立的 `.local/prompts.yml` 文件控制，模板见 `.java/prompt-config.example.yml`。其中 `prompts.assistant` 控制普通聊天，`prompts.explanation` 控制商品讲解，`prompts.question` 控制商品知识问答。默认路径可通过 `--super.prompt-config.path=绝对路径` 覆盖。商品知识资料仍由服务端追加，提示词不能跨商品读取资料。
+
 ## 协议兼容范围
 
 | 协议 | 请求与响应 | 可选厂商 |

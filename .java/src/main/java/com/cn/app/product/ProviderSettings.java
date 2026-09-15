@@ -20,6 +20,7 @@ public record ProviderSettings(String protocol, String baseUrl, String apiKey, S
     @com.fasterxml.jackson.annotation.JsonIgnore
     public boolean isSpeech(){return protocol.equals("OPENAI_SPEECH")||protocol.equals("MINIMAX_SPEECH");}
     public ProviderSettings withKey(String key){return new ProviderSettings(protocol,baseUrl,key,model,voice,speed,timeoutSeconds,maxTokens,maxCharacters,outputLimitField,extraBody);}
+    public ProviderSettings withMaxTokens(int value){return new ProviderSettings(protocol,baseUrl,apiKey,model,voice,speed,timeoutSeconds,value,maxCharacters,outputLimitField,extraBody);}
     public static ProviderSettings ai(AiProviderConfig c){return new ProviderSettings("OPENAI_CHAT",c.getBaseUrl(),c.getApiKey(),c.getModel(),"",1,c.getTimeoutSeconds(),1024,4000,"max_tokens","{}");}
     public static ProviderSettings speech(SpeechConfig c){return new ProviderSettings("OPENAI_SPEECH",c.getBaseUrl(),c.getApiKey(),c.getModel(),c.getVoice(),c.getSpeed(),c.getTimeoutSeconds(),1024,c.getMaxCharacters(),"max_tokens","{}");}
     public void validate(String channel){
