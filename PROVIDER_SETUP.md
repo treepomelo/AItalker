@@ -59,6 +59,7 @@ OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或
 
 - `GET /api/products`：商品列表与详细规格。
 - `GET /api/products/{id}/knowledge`：该商品公开测试资料。
+- `WebSocket /api/product-chat/{token}/{productId}`：基于当前商品知识资料的流式问答；消息为 `{"productId":1001,"question":"问题"}`。本地 `local` profile 可使用 `local` 标识，其他环境要求登录 Token。
 - `POST /api/products/{id}/explanations`：真实模型生成，参数 `scenario`、`tone`、`duration`；缺配置返回 HTTP 503 / `MODEL_NOT_CONFIGURED`。
 - `GET /api/products/{id}/explanations`：讲解历史。
 - `POST /api/products/{id}/explanations/{explanationId}/audio`：创建或复用真实语音任务；缺配置返回 HTTP 503 / `SPEECH_NOT_CONFIGURED`，不创建假任务。

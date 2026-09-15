@@ -33,7 +33,7 @@ public class TextChatSocket {
                 || StpUtil.getLoginIdByToken(token)!=null;
     }
 
-    static boolean isLocalAnonymousToken(String token, boolean localProfile) {
+    public static boolean isLocalAnonymousToken(String token, boolean localProfile) {
         return localProfile && "local".equals(token);
     }
     @OnMessage public void message(String input) {
