@@ -1,0 +1,17 @@
+# Merge this `super` section into .local/application-local.yml, then restart the backend.
+# base-url includes /v1 when required, but NOT /audio/speech or /chat/completions.
+super:
+  ai:
+    base-url: ${SUPER_AI_BASE_URL:}
+    api-key: ${SUPER_AI_API_KEY:}
+    model: ${SUPER_AI_MODEL:}
+    timeout-seconds: 60
+  speech:
+    base-url: ${SUPER_SPEECH_BASE_URL:}
+    api-key: ${SUPER_SPEECH_API_KEY:}
+    model: ${SUPER_SPEECH_MODEL:}
+    voice: ${SUPER_SPEECH_VOICE:alloy}
+    speed: 1.0
+    timeout-seconds: 90
+    max-characters: 4000
+    storage-directory: ../.local/audio
