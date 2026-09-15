@@ -23,9 +23,18 @@ public class TextChatSocket {
         this.session=session;
         session.setMaxTextMessageBufferSize(32000);
         session.setMaxIdleTimeout(120000);
-        if(StpUtil.getLoginIdByToken(token)==null) {
+        if(!isAuthorized(token)) {
             send("error","请先登录后使用实时聊天"); close();
         }
+    }
+
+    private boolean isAuthorized(String token) {
+        return isLocalAnonymousToken(token, SpringContextUtil.acceptsProfile("local"))
+                || StpUtil.getLoginIdByToken(token)!=null;
+    }
+
+    static boolean isLocalAnonymousToken(String token, boolean localProfile) {
+        return localProfile && "local".equals(token);
     }
     @OnMessage public void message(String input) {
         if(started)return;

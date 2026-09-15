@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
 
 /**
@@ -25,5 +26,9 @@ public class SpringContextUtil implements ApplicationContextAware {
 
     public static Object getBean(String beanId) throws BeansException {
         return applicationContext.getBean(beanId);
+    }
+
+    public static boolean acceptsProfile(String profile) {
+        return applicationContext.getEnvironment().acceptsProfiles(Profiles.of(profile));
     }
 }

@@ -3,7 +3,6 @@
     <view class="title">实时聊天</view>
     <view class="muted">与大模型实时对话。此会话与商品讲解相互独立。</view>
     <view v-if="capabilities && !capabilities.modelConfigured" class="notice">尚未配置大模型，请管理员完成配置后重试。</view>
-    <view v-else-if="!getTokenValue()" class="notice">当前未登录，实时聊天沿用登录后使用的访问规则。</view>
     <view v-for="(m,index) in messages" :key="index" class="message" :class="m.role">
       <view class="role">{{ m.role==='user'?'你':'AI 助手' }}</view><text>{{ m.content || '正在连接…' }}</text>
     </view>
@@ -28,7 +27,7 @@ async function send(){
   error.value='';generating.value=true;const current=++requestId;
   try{const result=await reqGetCapabilities();if(current!==requestId)return;capabilities.value=result.data}catch(e){if(current===requestId){error.value=e?.msg||'无法读取模型状态';generating.value=false}return}
   if(!capabilities.value.modelConfigured){error.value='尚未配置大模型，请管理员完成配置后重试';generating.value=false;return}
-  const token=getTokenValue();if(!token){error.value='请先登录后使用实时聊天';generating.value=false;return}
+  const token=getTokenValue()||'local';
   messages.value.push({role:'user',content:input.value.trim()});input.value='';
   const payload=JSON.stringify(messages.value.filter(m=>m.content).slice(-28));
   const answer={role:'assistant',content:''};messages.value.push(answer);const answerIndex=messages.value.length-1;
@@ -36,7 +35,7 @@ async function send(){
   socket=uni.connectSocket({url:env.baseWss+'/text-chat/'+encodeURIComponent(token),complete:()=>{}});
   socket.onOpen(()=>{if(current===requestId)socket.send({data:payload})});
   socket.onMessage(res=>{if(current!==requestId)return;try{const event=JSON.parse(res.data);if(event.type==='delta')messages.value[answerIndex].content+=event.content;if(event.type==='error'){error.value=event.content;generating.value=false}if(event.type==='done')generating.value=false}catch(e){error.value='模型响应格式异常';stop()}});
-  socket.onError(()=>{if(current===requestId){error.value='聊天连接失败，请检查网络和登录状态';generating.value=false}});
+  socket.onError(()=>{if(current===requestId){error.value='聊天连接失败，请检查本地服务和模型配置';generating.value=false}});
   socket.onClose(()=>{if(current===requestId){if(generating.value)error.value='连接已关闭，可重新发送';generating.value=false;socket=null}});
 }
 onHide(stop);onBeforeUnmount(stop);
