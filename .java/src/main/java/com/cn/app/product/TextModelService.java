@@ -15,9 +15,12 @@ public class TextModelService {
     public TextModelService(AiProviderConfig config){this(new ModelSettingsStore(config,new SpeechConfig(),""),new ProviderGateway());}
     public void requireConfigured(){gateway.require(settings.chat(),"chat");}
     public Flux<String> stream(String messagesJson){
+        return stream(messagesJson,"你是一位中文 AI 助手。清楚回答用户的问题，不要虚构事实。");
+    }
+    public Flux<String> stream(String messagesJson,String systemPrompt){
         ProviderSettings snapshot=settings.chat();gateway.require(snapshot,"chat");
         List<Map<String,String>> messages=new ArrayList<>();
-        messages.add(Map.of("role","system","content","你是一位中文 AI 助手。清楚回答用户的问题，不要虚构事实。"));
+        messages.add(Map.of("role","system","content",systemPrompt));
         try{
             JsonNode input=new ObjectMapper().readTree(messagesJson);
             if(!input.isArray()||input.isEmpty()||input.size()>30||messagesJson.length()>24000)throw new IllegalArgumentException();
