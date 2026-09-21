@@ -32,6 +32,14 @@ class SpeechServiceTest {
         doAnswer(i->{task.put("status",i.getArgument(1));return null;}).when(catalog).audioStatus(eq(id),anyString(),nullable(String.class),nullable(String.class));
     }
     @AfterEach void close(){if(service!=null)service.close();}
+    @Test void rejectsOldPriceTextBeforeReusingOrCreatingAudio(){
+        when(catalog.explanation(1001L,"example")).thenReturn(Map.of("content","测试零售价为人民币六十八元。"));
+        SpeechProvider provider=mock(SpeechProvider.class);service=new SpeechService(catalog,config,provider);
+        assertEquals("EXPLANATION_NEEDS_REGENERATION",assertThrows(ApiProblem.class,()->service.create(1001,"example")).errorCode);
+        verify(catalog,never()).audioByCache(anyString());
+        verify(catalog,never()).createAudio(anyLong(),anyString(),anyString());
+        verifyNoInteractions(provider);
+    }
     @Test void repeatedPlaybackReusesTaskAndSavedAudio() throws Exception {
         AtomicInteger calls=new AtomicInteger();
         service=new SpeechService(catalog,config,text->{calls.incrementAndGet();return new byte[]{1,2,3};});

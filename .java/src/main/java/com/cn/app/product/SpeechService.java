@@ -33,6 +33,8 @@ public class SpeechService {
 
     public synchronized Map<String,Object> create(long productId,String explanationId) {
         Map<String,Object> explanation=catalog.explanation(productId,explanationId);
+        if (ExplanationContentPolicy.containsCommercialContent((String)explanation.get("content")))
+            throw new ApiProblem(409,"EXPLANATION_NEEDS_REGENERATION","该历史讲解含有价格或售后内容，请先生成新讲解再合成语音。");
         ProviderSettings snapshot=settings.speech();
         if (!snapshot.configured()) throw new ApiProblem(503,"SPEECH_NOT_CONFIGURED","语音服务尚未配置，文字讲解可正常查看");
         String text=(String)explanation.get("content");

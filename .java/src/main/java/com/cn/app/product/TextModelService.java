@@ -33,10 +33,12 @@ public class TextModelService {
     }
     public String generate(String source,String scenario,String tone,int seconds){
         ProviderSettings snapshot=settings.chat();
-        String system=prompts.explanationPrompt();
-        String prompt="场景："+scenario+"；语气："+tone+"；目标时长："+seconds+"秒。\n资料：\n"+source;
+        String system=prompts.explanationPrompt()+"\n"+ExplanationContentPolicy.INSTRUCTION;
+        String prompt="场景："+scenario+"；语气："+tone+"；目标时长："+seconds+"秒。\n资料：\n"+ExplanationContentPolicy.sourceForExplanation(source);
         int requestedTokens=Math.min(4096,Math.max(1024,seconds*12));
         ProviderSettings generation=snapshot.withMaxTokens(Math.max(snapshot.maxTokens(),requestedTokens));
-        return gateway.complete(generation,List.of(Map.of("role","system","content",system),Map.of("role","user","content",prompt)));
+        String text=gateway.complete(generation,List.of(Map.of("role","system","content",system),Map.of("role","user","content",prompt)));
+        ExplanationContentPolicy.requireAllowed(text);
+        return text;
     }
 }

@@ -18,13 +18,13 @@ public record ProviderSettings(String protocol, String baseUrl, String apiKey, S
     public boolean configured(){return !baseUrl.isEmpty()&&!apiKey.isEmpty()&&!model.isEmpty()
             && (!isSpeech()||!voice.isEmpty());}
     @com.fasterxml.jackson.annotation.JsonIgnore
-    public boolean isSpeech(){return protocol.equals("OPENAI_SPEECH")||protocol.equals("MINIMAX_SPEECH");}
+    public boolean isSpeech(){return protocol.equals("OPENAI_SPEECH")||protocol.equals("MINIMAX_SPEECH")||protocol.equals("TENCENT_SPEECH");}
     public ProviderSettings withKey(String key){return new ProviderSettings(protocol,baseUrl,key,model,voice,speed,timeoutSeconds,maxTokens,maxCharacters,outputLimitField,extraBody);}
     public ProviderSettings withMaxTokens(int value){return new ProviderSettings(protocol,baseUrl,apiKey,model,voice,speed,timeoutSeconds,value,maxCharacters,outputLimitField,extraBody);}
     public static ProviderSettings ai(AiProviderConfig c){return new ProviderSettings("OPENAI_CHAT",c.getBaseUrl(),c.getApiKey(),c.getModel(),"",1,c.getTimeoutSeconds(),1024,4000,"max_tokens","{}");}
     public static ProviderSettings speech(SpeechConfig c){return new ProviderSettings("OPENAI_SPEECH",c.getBaseUrl(),c.getApiKey(),c.getModel(),c.getVoice(),c.getSpeed(),c.getTimeoutSeconds(),1024,c.getMaxCharacters(),"max_tokens","{}");}
     public void validate(String channel){
-        Set<String> protocols=channel.equals("chat")?Set.of("OPENAI_CHAT","ANTHROPIC","GEMINI"):Set.of("OPENAI_SPEECH","MINIMAX_SPEECH");
+        Set<String> protocols=channel.equals("chat")?Set.of("OPENAI_CHAT","ANTHROPIC","GEMINI"):Set.of("OPENAI_SPEECH","MINIMAX_SPEECH","TENCENT_SPEECH");
         if(!protocols.contains(protocol))bad("所选协议不适用于此功能");
         if(!Set.of("max_tokens","max_completion_tokens","omit").contains(outputLimitField))bad("请选择正确的输出长度字段");
         if(timeoutSeconds<5||timeoutSeconds>120||maxTokens<16||maxTokens>16384||maxCharacters<1||maxCharacters>4000)
@@ -48,6 +48,11 @@ public record ProviderSettings(String protocol, String baseUrl, String apiKey, S
             }catch(IllegalArgumentException e){bad("服务地址格式无效");}
         }
         if(protocol.equals("GEMINI")&&!model.isEmpty()&&!model.matches("[A-Za-z0-9_.:-]+"))bad("Gemini 模型 ID 不包含 models/ 前缀或 URL");
+        if(protocol.equals("TENCENT_SPEECH")){
+            if(!apiKey.isEmpty()&&!apiKey.matches("[A-Za-z0-9]+:[^:\\s]+"))bad("腾讯云密钥请使用 SecretId:SecretKey 格式");
+            if(!voice.isEmpty()&&!voice.equals("mp3"))bad("腾讯云语音当前仅输出 mp3，请将编码留作 mp3");
+            if(!model.isEmpty()&&!model.matches("\\d{1,9}"))bad("腾讯云音色 ID 应为数字，如 601000");
+        }
         extras();
     }
     public Map<String,Object> extras(){
@@ -74,7 +79,7 @@ public record ProviderSettings(String protocol, String baseUrl, String apiKey, S
     }
     public String endpoint(boolean stream){
         if(baseUrl.isEmpty())return "";
-        String route=switch(protocol){case "OPENAI_CHAT"->"/chat/completions";case "ANTHROPIC"->"/messages";case "OPENAI_SPEECH"->"/audio/speech";case "MINIMAX_SPEECH"->"/t2a_v2";case "GEMINI"->"";default->throw new ApiProblem(400,"UNSUPPORTED_PROTOCOL","不支持该协议");};
+        String route=switch(protocol){case "OPENAI_CHAT"->"/chat/completions";case "ANTHROPIC"->"/messages";case "OPENAI_SPEECH"->"/audio/speech";case "MINIMAX_SPEECH"->"/t2a_v2";case "GEMINI"->"";case "TENCENT_SPEECH"->"";default->throw new ApiProblem(400,"UNSUPPORTED_PROTOCOL","不支持该协议");};
         if(protocol.equals("GEMINI")){
             String root=baseUrl.replaceFirst("/models/[^/]+:(generateContent|streamGenerateContent)$","");
             return root+"/models/"+model+":"+(stream?"streamGenerateContent?alt=sse":"generateContent");

@@ -19,12 +19,20 @@ public class ModelSettingsStore {
     private final Map<String,Map<String,Object>> tests=new ConcurrentHashMap<>();
 
     public ModelSettingsStore(AiProviderConfig ai,SpeechConfig speech,@Value("${super.config.path:../.local/model-settings.json}") String path){
-        file=path.isBlank()?null:Path.of(path).toAbsolutePath().normalize();
+        file=resolveConfigFile(path);
         current=new Bundle(0,ProviderSettings.ai(ai),ProviderSettings.speech(speech));
         if(file!=null&&Files.exists(file))try{
             Bundle saved=json.readValue(file.toFile(),Bundle.class);
             saved.chat().validate("chat");saved.speech().validate("speech");current=saved;
         }catch(Exception e){throw new IllegalStateException("模型配置文件无法读取，请检查本地 model-settings.json");}
+    }
+    private static Path resolveConfigFile(String configuredPath){
+        if(configuredPath.isBlank()) return null;
+        Path configured=Path.of(configuredPath).toAbsolutePath().normalize();
+        if(Files.exists(configured) || !configuredPath.equals("../.local/model-settings.json")) return configured;
+        // Support launching the jar from either .java (documented) or the project root.
+        Path rootRelative=Path.of(".local/model-settings.json").toAbsolutePath().normalize();
+        return Files.exists(rootRelative)?rootRelative:configured;
     }
     public ProviderSettings chat(){return current.chat();}
     public ProviderSettings speech(){return current.speech();}

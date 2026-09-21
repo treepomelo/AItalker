@@ -17,7 +17,7 @@ public class ProductController {
     @GetMapping("/{id}") public Result detail(@PathVariable long id) { return Result.data(catalog.product(id)); }
     @GetMapping("/{id}/knowledge") public Result knowledge(@PathVariable long id) { catalog.product(id); return Result.data(catalog.documents(id)); }
     @PostMapping("/{id}/explanations") public Result generate(@PathVariable long id, @RequestBody(required=false) GenerateOptions options) {
-        if (options==null) options=new GenerateOptions("门店导购","自然亲切",60);
+        if (options==null) options=new GenerateOptions("文化赏析","古风雅叙",60);
         return Result.data(service.generate(id, options.scenario(),options.tone(),options.duration()));
     }
     @GetMapping("/{id}/explanations/latest") public Result latest(@PathVariable long id) {

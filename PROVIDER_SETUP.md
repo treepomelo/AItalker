@@ -21,6 +21,8 @@
 
 模型身份和回答风格通过独立的 `.local/prompts.yml` 文件控制，模板见 `.java/prompt-config.example.yml`。其中 `prompts.assistant` 控制普通聊天，`prompts.explanation` 控制商品讲解，`prompts.question` 控制商品知识问答。默认路径可通过 `--super.prompt-config.path=绝对路径` 覆盖。商品知识资料仍由服务端追加，提示词不能跨商品读取资料。
 
+讲解提示词在每次生成时重新读取，修改后无需重启；普通聊天和商品问答提示词仍需重启。讲解输入会过滤价格、交易和售后句子，生成结果还会经过关键词及金额格式校验（包括中文金额）；命中时返回 `EXPLANATION_CONTENT_REJECTED`，不保存该结果。该校验不能替代人工事实核对。历史讲解不会自动改写，含上述内容的旧版本会拒绝再次合成语音，请先生成新版本。
+
 ## 协议兼容范围
 
 | 协议 | 请求与响应 | 可选厂商 |
@@ -30,6 +32,9 @@
 | `GEMINI` | x-goog-api-key，contents / parts，generateContent / streamGenerateContent | Gemini 原生 API |
 | `OPENAI_SPEECH` | Bearer，`/audio/speech`，input / voice / speed，MP3 二进制 | OpenAI、硅基流动等兼容语音端点 |
 | `MINIMAX_SPEECH` | Bearer，`/t2a_v2`，voice_setting，业务状态检查与 hex MP3 解码 | MiniMax 中国区 / 国际区 |
+| `TENCENT_SPEECH` | TC3-HMAC-SHA256 签名，Key 填 `SecretId:SecretKey`，模型字段填数字音色 ID（如 `601000`），固定 `ap-guangzhou`，仅输出 mp3 | 腾讯云语音合成 TextToVoice |
+
+腾讯云单次合成上限 150 汉字，讲解文本按标点自动分段（每段 100 字内）多次合成并拼接 MP3；语速按 0.25–4 线性映射到 -2–6。需在腾讯云控制台开通语音合成服务并确认所选音色权限；Region 暂不支持在页面修改。
 
 OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或 `omit`，并填写白名单 JSON 扩展参数，例如 `{"enable_thinking":false}`。不允许覆盖 model、messages、stream 或鉴权，防止配置页显示值和实际调用不一致。每次请求及排队语音任务都捕获不可变配置快照，保存不会中途切换正在执行的任务；语音缓存包含配置指纹。
 
@@ -43,7 +48,7 @@ OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或
 - `PUT /api/admin/model-settings/{chat|speech}`：保存配置，需 revision、config、clearKey。
 - `POST /api/admin/model-settings/{chat|speech}/test`：测试同结构草稿，不切换生效配置。
 
-官方协议参考：[OpenAI 语音](https://developers.openai.com/api/docs/guides/text-to-speech)、[Claude Messages](https://platform.claude.com/docs/en/api/messages)、[Gemini GenerateContent](https://ai.google.dev/api/generate-content)、[MiniMax 语音](https://platform.minimax.io/docs/api-reference/speech-t2a-http)。
+官方协议参考：[OpenAI 语音](https://developers.openai.com/api/docs/guides/text-to-speech)、[Claude Messages](https://platform.claude.com/docs/en/api/messages)、[Gemini GenerateContent](https://ai.google.dev/api/generate-content)、[MiniMax 语音](https://platform.minimax.io/docs/api-reference/speech-t2a-http)、[腾讯云语音合成](https://cloud.tencent.com/document/product/1073/37995)。
 
 `GET /api/capabilities` 只返回功能是否配置和允许显示的模型名，不返回 Key。配置完整不等于连接已验证；无效 Key、超时、限流、非音频响应均通过明确错误反馈。
 

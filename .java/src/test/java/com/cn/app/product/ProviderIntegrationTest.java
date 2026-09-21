@@ -71,9 +71,13 @@ class ProviderIntegrationTest {
             exchange.getResponseBody().write(reply);exchange.close();
         });
         AiProviderConfig config=new AiProviderConfig();config.setBaseUrl(speech.getBaseUrl());config.setApiKey("test");config.setModel("test-model");
-        assertEquals("真实模型响应测试",new TextModelService(config).generate("书签68元","门店导购","亲切",60));
+        assertEquals("真实模型响应测试",new TextModelService(config).generate("书签适合普通纸质书。测试零售价：人民币68元。主体厚0.4毫米。","门店导购","亲切",60));
         JsonNode request=new ObjectMapper().readTree(body.get());
-        assertTrue(request.path("messages").path(1).path("content").asText().contains("书签68元"));
+        String source=request.path("messages").path(1).path("content").asText();
+        assertTrue(source.contains("书签适合普通纸质书"));
+        assertTrue(source.contains("0.4毫米"));
+        assertFalse(source.contains("68元"));
+        assertFalse(source.contains("零售价"));
         assertEquals("test-model",request.path("model").asText());
     }
 
