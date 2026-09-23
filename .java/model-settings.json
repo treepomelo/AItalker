@@ -1,0 +1,29 @@
+{
+  "revision" : 0,
+  "chat" : {
+    "protocol" : "OPENAI_CHAT",
+    "baseUrl" : "http://api.yunvps.cn/v1",
+    "apiKey" : "",
+    "model" : "k3",
+    "voice" : "",
+    "speed" : 1.0,
+    "timeoutSeconds" : 60,
+    "maxTokens" : 2048,
+    "maxCharacters" : 4000,
+    "outputLimitField" : "max_tokens",
+    "extraBody" : "{}"
+  },
+  "speech" : {
+    "protocol" : "TENCENT_SPEECH",
+    "baseUrl" : "https://tts.tencentcloudapi.com",
+    "apiKey" : "",
+    "model" : "101001",
+    "voice" : "mp3",
+    "speed" : 1.0,
+    "timeoutSeconds" : 90,
+    "maxTokens" : 1024,
+    "maxCharacters" : 4000,
+    "outputLimitField" : "max_tokens",
+    "extraBody" : "{}"
+  }
+}

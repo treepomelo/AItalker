@@ -11,28 +11,38 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ModelSettingsStore {
+    private static final String DEFAULT_PATH="../.local/model-settings.json";
     public record Bundle(long revision,ProviderSettings chat,ProviderSettings speech){}
     public record Edit(long revision,ProviderSettings config,boolean clearKey){}
     private final Path file;
+    private final Path persistFile;
     private final ObjectMapper json=new ObjectMapper();
     private volatile Bundle current;
     private final Map<String,Map<String,Object>> tests=new ConcurrentHashMap<>();
 
-    public ModelSettingsStore(AiProviderConfig ai,SpeechConfig speech,@Value("${super.config.path:../.local/model-settings.json}") String path){
-        file=resolveConfigFile(path);
+    public ModelSettingsStore(AiProviderConfig ai,SpeechConfig speech,@Value("${super.config.path:" + DEFAULT_PATH + "}") String path){
+        Path[] resolved=resolveConfigFile(path);
+        file=resolved[0];persistFile=resolved[1];
         current=new Bundle(0,ProviderSettings.ai(ai),ProviderSettings.speech(speech));
         if(file!=null&&Files.exists(file))try{
             Bundle saved=json.readValue(file.toFile(),Bundle.class);
             saved.chat().validate("chat");saved.speech().validate("speech");current=saved;
         }catch(Exception e){throw new IllegalStateException("模型配置文件无法读取，请检查本地 model-settings.json");}
     }
-    private static Path resolveConfigFile(String configuredPath){
-        if(configuredPath.isBlank()) return null;
+    private static Path[] resolveConfigFile(String configuredPath){
+        if(configuredPath.isBlank()) return new Path[]{null,null};
         Path configured=Path.of(configuredPath).toAbsolutePath().normalize();
-        if(Files.exists(configured) || !configuredPath.equals("../.local/model-settings.json")) return configured;
+        if(!configuredPath.equals(DEFAULT_PATH)) return new Path[]{configured,configured};
+        if(Files.exists(configured)) return new Path[]{configured,configured};
         // Support launching the jar from either .java (documented) or the project root.
         Path rootRelative=Path.of(".local/model-settings.json").toAbsolutePath().normalize();
-        return Files.exists(rootRelative)?rootRelative:configured;
+        if(Files.exists(rootRelative)) return new Path[]{rootRelative,rootRelative};
+        // Fall back to the committed keyless default; edits are persisted to the ignored .local copy.
+        for(String candidate:List.of("model-settings.json",".java/model-settings.json")){
+            Path committed=Path.of(candidate).toAbsolutePath().normalize();
+            if(Files.exists(committed)) return new Path[]{committed,configured};
+        }
+        return new Path[]{configured,configured};
     }
     public ProviderSettings chat(){return current.chat();}
     public ProviderSettings speech(){return current.speech();}
@@ -55,14 +65,14 @@ public class ModelSettingsStore {
         persist(next);current=next;return view();
     }
     private void persist(Bundle next){
-        if(file==null)return;
+        if(persistFile==null)return;
         try{
-            Files.createDirectories(file.getParent());
-            Path temp=Files.createTempFile(file.getParent(),"model-settings-",".tmp");
+            Files.createDirectories(persistFile.getParent());
+            Path temp=Files.createTempFile(persistFile.getParent(),"model-settings-",".tmp");
             try{
                 json.writerWithDefaultPrettyPrinter().writeValue(temp.toFile(),next);
-                try{Files.move(temp,file,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
-                catch(AtomicMoveNotSupportedException e){Files.move(temp,file,StandardCopyOption.REPLACE_EXISTING);}
+                try{Files.move(temp,persistFile,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}
+                catch(AtomicMoveNotSupportedException e){Files.move(temp,persistFile,StandardCopyOption.REPLACE_EXISTING);}
             }finally{Files.deleteIfExists(temp);}
         }catch(Exception e){throw new ApiProblem(500,"CONFIG_SAVE_FAILED","配置保存失败，请检查服务端目录权限");}
     }

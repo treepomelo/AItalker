@@ -7,10 +7,12 @@ import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 
 @Component
 public class PromptConfig {
+    private static final String DEFAULT_PATH = "../.local/prompts.yml";
     private static final String DEFAULT_ASSISTANT = "你是一位中文 AI 助手。清楚回答用户的问题，不要虚构事实。";
     private static final String DEFAULT_EXPLANATION = """
             你是文创商品讲解员，以功能介绍和文化底蕴为两条核心主线，设计巧思作为辅助说明。
@@ -30,8 +32,8 @@ public class PromptConfig {
     private final String configPath;
 
     public PromptConfig(@Value("${super.prompt-config.path:../.local/prompts.yml}") String path) {
-        configPath = path;
-        Properties properties = load(path);
+        configPath = resolve(path);
+        Properties properties = load(configPath);
         assistantPrompt = value(properties, "prompts.assistant", DEFAULT_ASSISTANT);
         explanationPrompt = value(properties, "prompts.explanation", DEFAULT_EXPLANATION);
         questionPrompt = value(properties, "prompts.question", DEFAULT_QUESTION);
@@ -51,6 +53,17 @@ public class PromptConfig {
                 : value(load(configPath), "prompts.explanation", DEFAULT_EXPLANATION);
     }
     public String questionPrompt() { return questionPrompt; }
+
+    private static String resolve(String configuredPath) {
+        if (!configuredPath.equals(DEFAULT_PATH)) return configuredPath;
+        if (Files.exists(Path.of(configuredPath).toAbsolutePath().normalize())) return configuredPath;
+        // Fall back to the committed default prompts when no editable .local copy exists.
+        for (String candidate : List.of("prompts.yml", ".java/prompts.yml")) {
+            Path committed = Path.of(candidate).toAbsolutePath().normalize();
+            if (Files.exists(committed)) return committed.toString();
+        }
+        return configuredPath;
+    }
 
     private static Properties load(String path) {
         Path file = Path.of(path).toAbsolutePath().normalize();
