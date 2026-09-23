@@ -1,40 +1,26 @@
 package com.cn.app.net;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.cn.app.product.ApiProblem;
 import com.cn.app.product.TextModelService;
 import com.cn.app.utils.SpringContextUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.websocket.*;
-import jakarta.websocket.server.PathParam;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
 import java.util.Map;
 
-@Component @ServerEndpoint("/text-chat/{token}")
+@Component @ServerEndpoint("/text-chat")
 public class TextChatSocket {
     private Session session;
     private Disposable subscription;
     private boolean started;
     private final ObjectMapper json=new ObjectMapper();
 
-    @OnOpen public void open(Session session,@PathParam("token") String token) {
+    @OnOpen public void open(Session session) {
         this.session=session;
         session.setMaxTextMessageBufferSize(32000);
         session.setMaxIdleTimeout(120000);
-        if(!isAuthorized(token)) {
-            send("error","请先登录后使用实时聊天"); close();
-        }
-    }
-
-    private boolean isAuthorized(String token) {
-        return isLocalAnonymousToken(token, SpringContextUtil.acceptsProfile("local"))
-                || StpUtil.getLoginIdByToken(token)!=null;
-    }
-
-    public static boolean isLocalAnonymousToken(String token, boolean localProfile) {
-        return localProfile && "local".equals(token);
     }
     @OnMessage public void message(String input) {
         if(started)return;

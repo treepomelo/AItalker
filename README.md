@@ -34,7 +34,6 @@
 
 > 后端
 
-* [SaToken](https://sa-token.cc/)
 * [Redis](https://redis.io)
 * [Maven](https://maven.io)
 * [SpringBoot 3](https://spring.io/projects/spring-boot3)
@@ -46,7 +45,6 @@
 `Redis7`
 `JDK21`
 `阿里OSS服务`
-`微信小程序APPID以及密钥`
 
 ### 小程序根目录执行命令
 

@@ -75,7 +75,6 @@
 import {ref, onMounted, onBeforeUnmount} from 'vue';
 import {onHide,onShow} from '@dcloudio/uni-app';
 import env from '@/env';
-import {getTokenValue} from '@/store/token';
 import {reqGetProducts,reqGenerateExplanation,reqGenerateAudio,reqGetCapabilities,reqGetKnowledge,reqGetHistory,reqGetAudioTask} from '@/api/product';
 const products=ref([]),selected=ref(null),documents=ref([]),history=ref([]),explanation=ref(null),capabilities=ref(null);
 const loadError=ref(''),generationError=ref(''),speechError=ref(''),loading=ref(false),speechLoading=ref(false),speechStatus=ref('等待生成…');
@@ -109,8 +108,7 @@ async function generate(){
 function askProduct(){
   if(!selected.value||questionLoading.value||!question.value.trim())return;
   stopQuestion();const current=questionEpoch;questionLoading.value=true;questionError.value='';answer.value='';
-  const token=getTokenValue()||'local';
-  questionSocket=uni.connectSocket({url:env.baseWss+'/product-chat/'+encodeURIComponent(token)+'/'+selected.value.id,complete:()=>{}});
+  questionSocket=uni.connectSocket({url:env.baseWss+'/product-chat/'+selected.value.id,complete:()=>{}});
   questionSocket.onOpen(()=>{if(current===questionEpoch)questionSocket.send({data:JSON.stringify({productId:selected.value.id,question:question.value.trim()})})});
   questionSocket.onMessage(res=>{if(current!==questionEpoch)return;try{const event=JSON.parse(res.data);if(event.type==='delta')answer.value+=event.content;if(event.type==='error'){questionError.value=event.content;questionLoading.value=false}if(event.type==='done')questionLoading.value=false}catch(e){questionError.value='模型响应格式异常';stopQuestion()}});
   questionSocket.onError(()=>{if(current===questionEpoch){questionError.value='提问连接失败，请检查本地服务和模型配置';questionLoading.value=false}});

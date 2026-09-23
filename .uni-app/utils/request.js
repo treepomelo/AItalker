@@ -1,6 +1,4 @@
 import env from '../env';
-import {getTokenValue} from "@/store/token";
-
 
 function service(options = {}) {
     if (!env.baseHttps) {
@@ -8,11 +6,9 @@ function service(options = {}) {
     }
     options.url = `${env.baseHttps}${options.url}`;
     options.timeout = options.timeout || 100000;
-    const tokenValue = getTokenValue();
     options.header = {
         'content-type': 'application/json',
         ...options.header,
-        ...(tokenValue ? {'Authorization': `Bearer ${tokenValue}`} : {}),
     };
 
     return new Promise((resolve, reject) => {

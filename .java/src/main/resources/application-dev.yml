@@ -19,11 +19,6 @@ ali-oss:
   bucket-name: 'sea-time'
   domain: '图片服务器域名'
 
-we-chat:
-  host: https://api.weixin.qq.com
-  app-id: '微信小程序APPID'
-  secret-key: '微信小程序密钥'
-
 chat-gpt:
   model-list:
     - model: gpt-3.5-turbo-1106

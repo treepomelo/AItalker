@@ -1,6 +1,5 @@
 package com.cn.app.net;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.cn.app.product.ApiProblem;
 import com.cn.app.product.ProductService;
 import com.cn.app.utils.SpringContextUtil;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
 import java.util.Map;
 
-@Component @ServerEndpoint("/product-chat/{token}/{productId}")
+@Component @ServerEndpoint("/product-chat/{productId}")
 public class ProductChatSocket {
     private Session session;
     private Disposable subscription;
@@ -21,17 +20,11 @@ public class ProductChatSocket {
     private boolean started;
     private final ObjectMapper json = new ObjectMapper();
 
-    @OnOpen public void open(Session session, @PathParam("token") String token, @PathParam("productId") long productId) {
+    @OnOpen public void open(Session session, @PathParam("productId") long productId) {
         this.session = session;
         this.productId = productId;
         session.setMaxTextMessageBufferSize(32000);
         session.setMaxIdleTimeout(120000);
-        if (!isAuthorized(token)) { send("error","本地聊天授权失败，请刷新页面重试"); close(); }
-    }
-
-    private boolean isAuthorized(String token) {
-        return TextChatSocket.isLocalAnonymousToken(token, SpringContextUtil.acceptsProfile("local"))
-                || StpUtil.getLoginIdByToken(token) != null;
     }
 
     @OnMessage public void message(String input) {

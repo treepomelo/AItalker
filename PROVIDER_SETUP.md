@@ -6,7 +6,7 @@
 
 测试使用当前表单草稿，会产生少量真实请求和可能的厂商费用；只有保存才切换业务配置。已配置不代表验证通过，修改参数或 Key 后需重新测试。聊天普通回复和流式回复分别检测，语音检查 MP3 响应。测试与商品讲解、聊天、语音生成共用适配器。
 
-保存文件为 `.local/model-settings.json`（默认以 `.java` 为工作目录），包含服务端密钥，已排除 Git 提交，不要分享该文件。浏览器不保存、不回显密钥；留空保留，显式清除后停用。切换服务主机需要重新填写 Key。文件原子写入；版本冲突会拒绝覆盖，点「重新读取」后再编辑。测试状态按配置指纹隔离，仅保存在内存，后端重启后需重新测试。
+保存文件为 `.local/model-settings.json`（默认以 `.java` 为工作目录），包含服务端密钥，已排除 Git 提交，不要分享该文件。浏览器不保存、不回显密钥；留空保留，显式清除后停用。切换服务主机需要重新填写 Key。文件原子写入；版本冲突会拒绝覆盖，点「重新读取」后再编辑。测试状态按配置指纹隔离，仅保存在内存，后端重启后需重新测试。仓库自带脱敏默认配置 `.java/model-settings.json`（不含密钥，仅保留服务地址、协议和模型 ID）；仅当 `.local` 下没有配置文件时读取，页面保存始终写入 `.local/model-settings.json`，不会修改仓库中的默认文件，密钥不会进入 Git。
 
 启动优先级：已保存的 JSON 配置 > Spring 环境变量 / 本地 YAML 初始配置。JSON 保存两个通道的完整快照；存在时，修改环境变量不会覆盖它。可用 `--super.config.path=绝对路径` 指定配置文件。初次未保存时仍可编辑 `.local/application-local.yml` 的 `super.ai` / `super.speech`，模板为 `.java/provider-config.example.yml`，或使用以下环境变量；这种方式需要重启，初始协议为 OpenAI 兼容。
 
@@ -19,7 +19,7 @@
 
 地址应包含供应商要求的版本前缀，例如 `https://api.openai.com/v1`。支持根地址或所选协议对应的完整接口地址，避免重复拼接；页面显示已保存配置实际使用的地址。模型和音色填写账号实际支持的 ID，模板不自动猜测或查询模型列表。
 
-模型身份和回答风格通过独立的 `.local/prompts.yml` 文件控制，模板见 `.java/prompt-config.example.yml`。其中 `prompts.assistant` 控制普通聊天，`prompts.explanation` 控制商品讲解，`prompts.question` 控制商品知识问答。默认路径可通过 `--super.prompt-config.path=绝对路径` 覆盖。商品知识资料仍由服务端追加，提示词不能跨商品读取资料。
+模型身份和回答风格通过独立的 `.local/prompts.yml` 文件控制，模板见 `.java/prompt-config.example.yml`。仓库自带默认提示词 `.java/prompts.yml`，`.local/prompts.yml` 不存在时直接生效，需要定制时再复制到 `.local` 覆盖。其中 `prompts.assistant` 控制普通聊天，`prompts.explanation` 控制商品讲解，`prompts.question` 控制商品知识问答。默认路径可通过 `--super.prompt-config.path=绝对路径` 覆盖。商品知识资料仍由服务端追加，提示词不能跨商品读取资料。
 
 讲解提示词在每次生成时重新读取，修改后无需重启；普通聊天和商品问答提示词仍需重启。讲解输入会过滤价格、交易和售后句子，生成结果还会经过关键词及金额格式校验（包括中文金额）；命中时返回 `EXPLANATION_CONTENT_REJECTED`，不保存该结果。该校验不能替代人工事实核对。历史讲解不会自动改写，含上述内容的旧版本会拒绝再次合成语音，请先生成新版本。
 
@@ -42,7 +42,7 @@ OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或
 
 ## 配置访问权限
 
-仅在 `local` profile、请求来自回环地址且 Host 为 localhost / 回环地址时，允许本机无登录管理。浏览器 Origin 仅允许 localhost / 127.0.0.1 的 5173、9000 端口；写入和测试还需 `X-Config-Request: 1`。非本机或非 local 模式要求登录并具有 ADMIN 角色。手机/远程小程序不会获得本地管理豁免。该规则不会开启匿名聊天。
+应用完全免登录，无任何身份鉴权。写入和测试接口要求自定义请求头 `X-Config-Request: 1`（配置页自动携带），用于阻挡浏览器跨站表单类请求，不构成身份验证。公网部署时请在反向代理层自行限制管理接口的访问来源。
 
 - `GET /api/admin/model-settings`：脱敏配置、实际地址、当前验证状态。
 - `PUT /api/admin/model-settings/{chat|speech}`：保存配置，需 revision、config、clearKey。
@@ -66,7 +66,7 @@ OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或
 
 - `GET /api/products`：商品列表与详细规格。
 - `GET /api/products/{id}/knowledge`：该商品公开测试资料。
-- `WebSocket /api/product-chat/{token}/{productId}`：基于当前商品知识资料的流式问答；消息为 `{"productId":1001,"question":"问题"}`。本地 `local` profile 可使用 `local` 标识，其他环境要求登录 Token。
+- `WebSocket /api/product-chat/{productId}`：基于当前商品知识资料的流式问答；消息为 `{"productId":1001,"question":"问题"}`，无需登录。
 - `POST /api/products/{id}/explanations`：真实模型生成，参数 `scenario`、`tone`、`duration`；缺配置返回 HTTP 503 / `MODEL_NOT_CONFIGURED`。
 - `GET /api/products/{id}/explanations`：讲解历史。
 - `POST /api/products/{id}/explanations/{explanationId}/audio`：创建或复用真实语音任务；缺配置返回 HTTP 503 / `SPEECH_NOT_CONFIGURED`，不创建假任务。
@@ -89,6 +89,6 @@ OpenAI 兼容聊天可按模型选择 `max_tokens`、`max_completion_tokens` 或
 
 ## 实时聊天
 
-已恢复独立的实时聊天页，使用服务器配置的文本模型，通过 `/api/text-chat/{token}` 流式回复。本地 `local` profile 下使用固定的 `local` 标识即可测试，不要求登录；其他环境仍要求有效登录 Token。当前会话仅保留在页面内，完整登录体验与聊天历史持久化仍待明确访问规则后完善。
+已恢复独立的实时聊天页，使用服务器配置的文本模型，通过 `/api/text-chat` 流式回复，无需登录。当前会话仅保留在页面内。
 
-管理知识库接口已改为 MySQL，并在入口校验登录及 ADMIN 角色。本次公开资料接口仅面向公开测试商品，不应用来提供私有知识库全文。
+管理知识库接口已改为 MySQL，免登录开放。本次公开资料接口仅面向公开测试商品，不应用来提供私有知识库全文。

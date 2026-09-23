@@ -1,5 +1,4 @@
 import {createStore} from 'vuex'
-import {getTokenValue, removeTokenValue} from "@/store/token";
 import {getUserInfo, removeUserInfo, setUserInfo} from "@/store/userInfo";
 import {getUserSetting, removeUserSetting, setUserSetting} from "@/store/userSetting";
 
@@ -15,7 +14,6 @@ const store = createStore({
     mutations: {
         logout(state) {
             state.userInfo = undefined
-            removeTokenValue()
         },
         setUserInfo(state, info) {
             state.userInfo = info;
@@ -34,13 +32,8 @@ const store = createStore({
             removeUserSetting()
         },
         initState(state) {
-            let tokenValue = getTokenValue();
-            if (tokenValue) {
-                let user = getUserInfo();
-                let setting = getUserSetting();
-                state.userInfo = user;
-                state.userSetting = setting;
-            }
+            state.userInfo = getUserInfo();
+            state.userSetting = getUserSetting();
         },
     },
 })
